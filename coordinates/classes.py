@@ -54,8 +54,7 @@ class MathDict(Mapping):
         return self._unary_op(operator.neg)
 
     def __hash__(self) -> int:
-        # Combine attributes into a tuple to generate the hash
-        return hash(self)
+        return hash(frozenset(self.items()))
 
     def __pos__(self) -> Self:
         return self._unary_op(operator.pos)
