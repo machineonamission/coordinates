@@ -1,12 +1,15 @@
 import functools
+import math
 import operator
 from collections import OrderedDict
-from numbers import Number
 from collections.abc import Mapping, KeysView, ValuesView, ItemsView
-
-import math
+from numbers import Number
 
 __all__ = ["Coordinate", "spaced_coordinate"]
+
+from typing import TypeVar, Union
+
+Self = TypeVar("Self", bound="MathDict")
 
 
 class MathDict(Mapping):
@@ -35,46 +38,41 @@ class MathDict(Mapping):
     def __iter__(self):
         return iter(self._dict)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._dict)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "{class_name}({d})".format(class_name=type(self).__name__, d=self._dict)
 
-    def __round__(self, n=None):
+    def __round__(self, n=None) -> Self:
         return type(self)({key: round(val, n) for key, val in self.items()})
 
-    def _unary_op(self, op):
+    def _unary_op(self, op) -> Self:
         return type(self)({key: op(val) for key, val in self.items()})
 
-    def __neg__(self):
+    def __neg__(self) -> Self:
         return self._unary_op(operator.neg)
 
-    def __eq__(self, other):
-        if not isinstance(other, Coordinate):
-            return NotImplemented
-        return self._unary_op(operator.eq)
-
-    def __hash__(self):
+    def __hash__(self) -> int:
         # Combine attributes into a tuple to generate the hash
         return hash(self)
 
-    def __pos__(self):
+    def __pos__(self) -> Self:
         return self._unary_op(operator.pos)
 
-    def __abs__(self):
+    def __abs__(self) -> Self:
         return self._unary_op(operator.abs)
 
-    def __ceil__(self):
+    def __ceil__(self) -> Self:
         return self._unary_op(math.ceil)
 
-    def __floor__(self):
+    def __floor__(self) -> Self:
         return self._unary_op(math.floor)
 
-    def __trunc__(self):
+    def __trunc__(self) -> Self:
         return self._unary_op(math.trunc)
 
-    def _binary_op(self, op, other):
+    def _binary_op(self, op, other: Union[Self, Number]) -> Self:
         if isinstance(other, Number):
             other = {key: other for key in self.keys()}
         elif not hasattr(other, "keys"):
@@ -83,34 +81,37 @@ class MathDict(Mapping):
             raise KeyError("{} and {} do not have the same keys".format(self, other))
         return type(self)({key: op(val, other[key]) for key, val in self.items()})
 
-    def __add__(self, other):
+    def __add__(self: Self, other: Union[Self, Number]) -> Self:
         return self._binary_op(operator.add, other)
 
-    def __radd__(self, other):
+    def __eq__(self, other: Self) -> Self:
+        return self._binary_op(operator.add, other)
+
+    def __radd__(self: Self, other: Union[Self, Number]) -> Self:
         return self + other
 
-    def __sub__(self, other):
+    def __sub__(self: Self, other: Union[Self, Number]) -> Self:
         return self._binary_op(operator.sub, other)
 
-    def __rsub__(self, other):
+    def __rsub__(self: Self, other: Union[Self, Number]) -> Self:
         return -self + other
 
-    def __mul__(self, other):
+    def __mul__(self: Self, other: Union[Self, Number]) -> Self:
         return self._binary_op(operator.mul, other)
 
-    def __rmul__(self, other):
+    def __rmul__(self: Self, other: Union[Self, Number]) -> Self:
         return self * other
 
-    def __floordiv__(self, other):
+    def __floordiv__(self: Self, other: Union[Self, Number]) -> Self:
         return self._binary_op(operator.floordiv, other)
 
-    def __rfloordiv__(self, other):
+    def __rfloordiv__(self: Self, other: Union[Self, Number]) -> Self:
         return math.floor(other / self)
 
-    def __truediv__(self, other):
+    def __truediv__(self: Self, other: Union[Self, Number]) -> Self:
         return self._binary_op(operator.truediv, other)
 
-    def __rtruediv__(self, other):
+    def __rtruediv__(self: Self, other: Union[Self, Number]) -> Self:
         if isinstance(other, Number):
             other = {key: other for key in self.keys()}
         elif not hasattr(other, "keys"):
@@ -119,10 +120,10 @@ class MathDict(Mapping):
             raise KeyError("{} and {} do not have the same keys".format(self, other))
         return type(self)({key: other[key] / val for key, val in self.items()})
 
-    def __mod__(self, other):
+    def __mod__(self: Self, other: Union[Self, Number]) -> Self:
         return self._binary_op(operator.mod, other)
 
-    def __rmod__(self, other):
+    def __rmod__(self: Self, other: Union[Self, Number]) -> Self:
         if isinstance(other, Number):
             other = {key: other for key in self.keys()}
         elif not hasattr(other, "keys"):
@@ -131,18 +132,18 @@ class MathDict(Mapping):
             raise KeyError("{} and {} do not have the same keys".format(self, other))
         return type(self)({key: other[key] % val for key, val in self.items()})
 
-    def __divmod__(self, other):
+    def __divmod__(self: Self, other: Union[Self, Number]) -> tuple[Self, Self]:
         mod = self % other
         return math.floor((self - mod) / other), mod
 
-    def __rdivmod__(self, other):
+    def __rdivmod__(self: Self, other: Union[Self, Number]) -> tuple[Self, Self]:
         mod = other % self
         return math.floor((other - mod) / self), mod
 
-    def __pow__(self, other):
+    def __pow__(self: Self, other: Union[Self, Number]) -> Self:
         return self._binary_op(operator.pow, other)
 
-    def __rpow__(self, other):
+    def __rpow__(self: Self, other: Union[Self, Number]) -> Self:
         if isinstance(other, Number):
             other = {key: other for key in self.keys()}
         elif not hasattr(other, "keys"):
@@ -151,43 +152,43 @@ class MathDict(Mapping):
             raise KeyError("{} and {} do not have the same keys".format(self, other))
         return type(self)({key: other[key] ** val for key, val in self.items()})
 
-    def __iadd__(self, other):
+    def __iadd__(self: Self, other: Union[Self, Number]) -> Self:
         return self._binary_op(operator.iadd, other)
 
-    def __isub__(self, other):
+    def __isub__(self: Self, other: Union[Self, Number]) -> Self:
         return self._binary_op(operator.isub, other)
 
-    def __imul__(self, other):
+    def __imul__(self: Self, other: Union[Self, Number]) -> Self:
         return self._binary_op(operator.imul, other)
 
-    def __ifloordiv__(self, other):
+    def __ifloordiv__(self: Self, other: Union[Self, Number]) -> Self:
         return self._binary_op(operator.ifloordiv, other)
 
-    def __itruediv__(self, other):
+    def __itruediv__(self: Self, other: Union[Self, Number]) -> Self:
         return self._binary_op(operator.itruediv, other)
 
-    def __imod__(self, other):
+    def __imod__(self: Self, other: Union[Self, Number]) -> Self:
         return self._binary_op(operator.imod, other)
 
-    def __ipow__(self, other):
+    def __ipow__(self: Self, other: Union[Self, Number]) -> Self:
         return self._binary_op(operator.ipow, other)
 
-    def sum(self):
+    def sum(self) -> Number:
         """Find the sum of the values"""
         return sum(self.values())
 
-    def prod(self):
+    def prod(self) -> Number:
         """Find the product of the values"""
         p = 1
         for val in self.values():
             p *= val
         return p
 
-    def norm(self, order=2):
+    def norm(self, order=2) -> Number:
         """Find the vector norm, with the given order, of the values"""
         return (sum(val ** order for val in abs(self).values())) ** (1 / order)
 
-    def map(self, fn, *args, **kwargs):
+    def map(self, fn, *args, **kwargs) -> Self:
         return type(self)({key: fn(val, *args, **kwargs) for key, val in self.items()})
 
 
