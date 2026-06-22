@@ -50,6 +50,15 @@ class MathDict(Mapping):
     def __neg__(self):
         return self._unary_op(operator.neg)
 
+    def __eq__(self, other):
+        if not isinstance(other, Coordinate):
+            return NotImplemented
+        return self._unary_op(operator.eq)
+
+    def __hash__(self):
+        # Combine attributes into a tuple to generate the hash
+        return hash(self)
+
     def __pos__(self):
         return self._unary_op(operator.pos)
 
