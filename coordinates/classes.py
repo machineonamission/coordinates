@@ -83,8 +83,9 @@ class MathDict(Mapping):
     def __add__(self: Self, other: Union[Self, Number]) -> Self:
         return self._binary_op(operator.add, other)
 
-    def __eq__(self, other: Self) -> Self:
-        return self._binary_op(operator.add, other)
+    def __eq__(self, other: Self) -> bool:
+        all_eq = self._binary_op(operator.eq, other)
+        return all([e for e in all_eq.values()])
 
     def __radd__(self: Self, other: Union[Self, Number]) -> Self:
         return self + other
